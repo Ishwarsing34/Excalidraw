@@ -1,7 +1,8 @@
 
 import { Request, Response } from "express";
 import { CreateUserSchema, SigninSchema, CreateRoomSchema } from "@repo/common/schema"
-import {prisma} from "@repo/db/client";
+// import {prisma} from "@repo/db/client";
+import {prisma} from "@repo/db/client"
 import bcrypt from 'bcrypt';
 import  jwt  from "jsonwebtoken";
 import { JWT_SECRET } from "@repo/backend-common/config";
