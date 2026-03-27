@@ -7,7 +7,7 @@ import bcrypt from 'bcrypt';
 import jwt from "jsonwebtoken";
 // import { JWT_SECRET } from "@repo/backend-common/config";
 // import { MY_JWT_SECRET } from "@repo/backend-common/config";
-  
+
 const MY_JWT_SECRET = process.env.JWT_SECRET;
 
 
@@ -136,12 +136,12 @@ export async function logIn(req: Request, res: Response) {
     // console.log("reach 1")
 
     const { email, password } = parsed.data;
-    
-      console.log("reach 10")
+
+    console.log("reach 10")
     const user = await prisma.user.findUnique({
       where: { email }
     });
-     
+
 
     // Don't reveal whether user exists or not
     if (!user) {
@@ -149,8 +149,8 @@ export async function logIn(req: Request, res: Response) {
         message: "Invalid email or password"
       });
     }
-      
-  
+
+
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
@@ -159,12 +159,12 @@ export async function logIn(req: Request, res: Response) {
       });
     }
 
-    
+
     if (!MY_JWT_SECRET) {
       throw new Error("JWT_SECRET is not defined");
-    } 
+    }
 
-    
+
 
     const token = jwt.sign(
       { userId: user.id },
@@ -172,19 +172,19 @@ export async function logIn(req: Request, res: Response) {
       { expiresIn: "7d" }
     );
 
-   
+
     return res.status(200).json({
       message: "Login successful",
       token
     });
 
 
-    
+
 
   } catch (error) {
-  
+
     return res.status(500).json({
-      message: "INTERNAL SERVER ERROR"     
+      message: "INTERNAL SERVER ERROR"
     });
   }
 }
@@ -210,20 +210,51 @@ export async function Createroom(req: Request, res: Response) {
     const { name } = parsedata.data;
 
 
-    //@ts-ignore
-
-    const userId = req.userId;
 
 
-    await prisma.room.create({
+    const userId = (req as any).userId;
+
+    if (!userId) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    const room = await prisma.room.create({
       data: {
         slug: name,
         adminId: userId
       }
     })
-    return res.status(200).json({ message: "Signup endpoint working" });
-  } catch (err) {
+    return res.status(200).json({ roomId: room.id });
+  } catch (error) {
+    console.log("this is room error : -", error)
     res.status(500).json({ error: "Something went wrong" });
   }
 }
 
+export async function getChats(req: Request, res: Response) {
+  try {
+    const roomId = Number(req.params.roomId);
+
+    if (isNaN(roomId)) {
+      return res.status(400).json({ message: "Invalid roomId" });
+    }
+
+    const messages = await prisma.chat.findMany({
+      where: {
+        roomId: roomId
+      },
+      orderBy: {
+        id: "desc"
+      },
+      take: 50
+    });
+
+    return res.status(200).json({
+      messages
+    });
+
+  } catch (error) {
+    console.log("getChats error:", error);
+    return res.status(500).json({ message: "Something went wrong" });
+  }
+}

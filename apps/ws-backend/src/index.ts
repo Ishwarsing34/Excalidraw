@@ -80,9 +80,11 @@ ws.on("connection", function connection(ws, request) {
             const roomId = parsedData.roomId;
             const msg = parsedData.message;
 
+            const numericRoomId = Number(roomId);
+
             await prisma.chat.create({
                 data : {
-                    roomId,
+                    roomId : numericRoomId,
                     message : msg,
                     userId
                 }
