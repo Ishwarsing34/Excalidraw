@@ -5,7 +5,10 @@ import { CreateUserSchema, SigninSchema, CreateRoomSchema } from "@repo/common/s
 import { prisma } from "@repo/db/client"
 import bcrypt from 'bcrypt';
 import jwt from "jsonwebtoken";
-import { JWT_SECRET } from "@repo/backend-common/config";
+// import { JWT_SECRET } from "@repo/backend-common/config";
+// import { MY_JWT_SECRET } from "@repo/backend-common/config";
+  
+const MY_JWT_SECRET = process.env.JWT_SECRET;
 
 
 export async function signUp(req: Request, res: Response) {
@@ -70,60 +73,126 @@ export async function signUp(req: Request, res: Response) {
 
 
 
+// export async function logIn(req: Request, res: Response) {
+//   try {
+//     const body = SigninSchema.safeParse(req.body);
+
+//     if (!body.success) {
+//       return res.json({
+//         message: "Incorrect Input"
+//       })
+//     }
+
+
+//     const { email, password } = body.data;
+
+//     const existingUser = await prisma.user.findUnique({
+//       where: { email }
+//     })
+
+
+//     if (!existingUser) {
+//       return res.status(404).json({
+//         message: "No User Exists"
+//       })
+//     }
+
+//     const isMatch = await bcrypt.compare(password, existingUser.password);
+
+//     if (!isMatch) {
+//       return res.status(400).json({
+//         message: "Incorrect Password"
+//       })
+//     }
+
+
+//     const token = jwt.sign({
+//       userId: existingUser.id
+//     }, MY_JWT_SECRET as string)
+
+
+//     return res.status(200).json({
+//       message: "Login Successful",
+//       token
+//     })
+
+
+
+//   } catch (err) {
+//     res.status(500).json({ error: "Something went wrong" });
+//   }
+// }
+
 export async function logIn(req: Request, res: Response) {
   try {
-    const body = SigninSchema.safeParse(req.body);
+    const parsed = SigninSchema.safeParse(req.body);
 
-    if (!body.success) {
-      return res.json({
-        message: "Incorrect Input"
-      })
+    if (!parsed.success) {
+      return res.status(400).json({
+        message: "Invalid input"
+      });
     }
 
+    // console.log("reach 1")
 
-    const { email, password } = body.data;
-
-    const existingUser = await prisma.user.findUnique({
+    const { email, password } = parsed.data;
+    
+      console.log("reach 10")
+    const user = await prisma.user.findUnique({
       where: { email }
-    })
+    });
+     
 
-
-    if (!existingUser) {
-      return res.status(404).json({
-        message: "No User Exists"
-      })
+    // Don't reveal whether user exists or not
+    if (!user) {
+      return res.status(400).json({
+        message: "Invalid email or password"
+      });
     }
-
-    const isMatch = await bcrypt.compare(password, existingUser.password);
+      
+  
+    const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
       return res.status(400).json({
-        message: "Incorrect Password"
-      })
+        message: "Invalid email or password"
+      });
     }
 
+    
+    if (!MY_JWT_SECRET) {
+      throw new Error("JWT_SECRET is not defined");
+    } 
 
-    const token = jwt.sign({
-      userId: existingUser.id
-    }, JWT_SECRET)
+    
 
+    const token = jwt.sign(
+      { userId: user.id },
+      MY_JWT_SECRET,
+      { expiresIn: "7d" }
+    );
 
+   
     return res.status(200).json({
-      message: "Login Successful",
+      message: "Login successful",
       token
-    })
+    });
 
 
+    
 
-  } catch (err) {
-    res.status(500).json({ error: "Something went wrong" });
+  } catch (error) {
+  
+    return res.status(500).json({
+      message: "INTERNAL SERVER ERROR"     
+    });
   }
 }
 
 
 
 
-export async function room(req: Request, res: Response) {
+export async function Createroom(req: Request, res: Response) {
   try {
 
 

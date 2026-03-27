@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 // import {JWT_SECRET} from '@repo/backend-common/config'
-import {JWT_SECRET} from '@repo/backend-common/config'
+const MY_JWT_SECRET = process.env.JWT_SECRET;
+
 
 export function authcheck(
   req: Request,
@@ -17,13 +18,16 @@ export function authcheck(
   const token = authHeader.split(" ")[1];
 
   try {
-    const decoded = jwt.verify(token as string, JWT_SECRET as string);
+    const decoded = jwt.verify(token as string, MY_JWT_SECRET as string);
       
     //@ts-ignore
-    (req as any).userId = decoded.userId;
+    req.userId = decoded.userId;
+
+    console.log("hiitt ")
 
     next();
-  } catch (err) {
+  } catch (error) {
+    console.log("this is error :- " , error)
     return res.status(403).json({ message: "Invalid token" });
   }
 }

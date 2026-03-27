@@ -1,11 +1,11 @@
 import express, { Router } from 'express';
-import { room } from '../controllers/authControllers.js';
+import { Createroom } from '../controllers/authControllers.js';
 import { authcheck } from '../middlewares/auth.js';
 
 const roomRouter : Router = express.Router();
 
 
-roomRouter.post('/create' , authcheck , room);
+roomRouter.post("/create" , authcheck , Createroom);
 
 
 export {roomRouter}
