@@ -1,74 +1,76 @@
-"use client"
+"use client";
 
 import { useEffect, useState } from "react";
 import { useSocket } from "../hooks/useSocket";
 
-
-
 export function ChatRoomClient({
-    messages,
-    id
+  messages,
+  id,
 }: {
-
-    messages: { message: string }[];
-    id: string
+  messages: { message: string }[];
+  id: string;
 }) {
+  const { socket, loading } = useSocket();
 
+  const [currMsg, setCurrMsg] = useState("");
+  const [chats, setChats] = useState(messages);
 
-    const { socket, loading } = useSocket();
+  useEffect(() => {
+    if (!socket || loading) return;
 
-    const [currMsg, setCurrMsg] = useState("")
+    const handleMessage = (event: MessageEvent) => {
+      const parsedData = JSON.parse(event.data);
 
-    const [chats, setChats] = useState(messages)
+      if (parsedData.type === "chat") {
+        setChats((c) => [...c, { message: parsedData.message }]);
+      }
+    };
 
+    socket.send(
+      JSON.stringify({
+        type: "join_room",
+        roomId: id,
+      })
+    );
 
-    useEffect(() => {
+    socket.addEventListener("message", handleMessage);
 
-        if (socket && !loading) {
+    return () => {
+      socket.removeEventListener("message", handleMessage);
+    };
+  }, [socket, loading, id]);
 
+  const sendMessage = () => {
+    if (!currMsg.trim()) return;
 
-            socket.send(JSON.stringify({
-                type: "join_room",
-                roomId: id
-            }))
-            socket.onmessage = (event) => {
+    socket?.send(
+      JSON.stringify({
+        type: "chat",
+        roomId: id,
+        message: currMsg,
+      })
+    );
 
-                const parsedData = JSON.parse(event.data);
+    setCurrMsg("");
+  };
 
-                if (parsedData.type === "chat") {
+  return (
+    <div>
+      {chats.map((m, i) => (
+        <div key={i}>{m.message}</div>
+      ))}
 
-                    setChats(c => [...c, { message: parsedData.message }])
-                }
-
-
-            }
-        }
-    }, [socket, loading, id])
-
-    return <div>
-        {messages.map(m => <div>{m.message}</div>)}
-
-        <input
-            type="text"
-            placeholder="message"
-            value={currMsg}
-            onChange={(e) => setCurrMsg(e.target.value)}
-        ></input>
-        
-        <button
-        
-        onClick={() =>{
-
-            socket?.send(JSON.stringify({
-                type : "chat",
-                roomId : id,
-                message: currMsg
-            }))
-
-            setCurrMsg("");
+      <input
+        type="text"
+        placeholder="message"
+        value={currMsg}
+        onChange={(e) => setCurrMsg(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") sendMessage();
         }}
-        
-        >Send Message</button>
-    </div>
+      />
 
+      <button onClick={sendMessage}>Send Message</button>
+    </div>
+  );
 }
