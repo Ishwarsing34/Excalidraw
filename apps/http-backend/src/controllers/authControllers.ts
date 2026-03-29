@@ -258,3 +258,36 @@ export async function getChats(req: Request, res: Response) {
     return res.status(500).json({ message: "Something went wrong" });
   }
 }
+
+
+export async function findRoom(req: Request, res: Response) {
+  try {
+    const slug  = req.params.slug as string;
+
+    if(!slug){
+      
+      return res.status(404).json({
+          message : "no slug exists"
+      })
+      
+    }
+
+    const room = await prisma.room.findFirst({
+      where: {
+        slug: slug
+      },
+      select: {
+        id: true
+      }
+    });
+
+    if (!room) {
+      return res.status(404).json({ message: "Room not found" });
+    }
+
+    return res.json({ roomId: room.id });
+
+  } catch (error) {
+    return res.status(500).json({ message: "Server error" });
+  }
+}

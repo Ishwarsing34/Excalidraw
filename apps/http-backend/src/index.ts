@@ -13,8 +13,8 @@ const app = express()
 app.use(express.json());
 
 
-app.use("/api/v1/auth" , authRouter);
-app.use("/api/v1/rooms" , roomRouter);
+app.use("/auth" , authRouter);
+app.use("/rooms" , roomRouter);
 
 
 app.get('/' , (req : Request , res : Response) =>{
