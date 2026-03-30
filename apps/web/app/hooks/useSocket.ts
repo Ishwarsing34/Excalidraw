@@ -28,7 +28,7 @@ export function useSocket() {
     };
 
     return () => {
-      ws.close(); // ✅ cleanup
+      ws.close();
     };
   }, []);
 
