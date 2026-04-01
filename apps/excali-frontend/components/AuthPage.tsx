@@ -55,4 +55,4 @@ export function AuthPage({ isSignin }: { isSignin: boolean }) {
       </div>
     </div>
   )
-}
+} 

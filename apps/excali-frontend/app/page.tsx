@@ -1,7 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { Icon } from "next/dist/lib/metadata/types/metadata-types";
 import { useRouter } from "next/navigation";
+import { ReactNode } from "react";
 
 export default function Home() {
   const router = useRouter();
@@ -105,7 +107,13 @@ export default function Home() {
   );
 }
 
-function FeatureCard({ icon, title, desc }: any) {
+interface FeatureCard {
+  icon : ReactNode,
+  title : string ,
+  desc : string
+}
+
+function FeatureCard({ icon, title, desc }: FeatureCard) {
   return (
     <motion.div
       whileHover={{ scale: 1.05 }}
